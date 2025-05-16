@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>树洞聊天室</title>
+    <!-- 这是闲暇之余根据网友的灵感制作的一个简单的前端交互网页，请勿用作商业用途或其他有价交易 -->
+     <!-- https://github.com/chahubeili/treeTalkRoom_wyh.git -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6c63ff',
+                        secondary: '#f0f0f0',
+                        accent: '#007bff',
+                        dark: '#333333',
+                        light: '#f9f9f9'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                backdrop-filter: blur(10px);
+                background-color: rgba(255, 255, 255, 0.7);
+            }
+            .custom-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            }
+            .transition-custom {
+                transition: all 0.3s ease;
+            }
+            .checkbox-custom {
+                position: relative;
+                width: 18px;
+                height: 18px;
+                border: 1px solid #d1d5db;
+                border-radius: 3px;
+                cursor: pointer;
+                display: inline-block;
+                vertical-align: middle;
+            }
+            .checkbox-custom::after {
+                content: '';
+                position: absolute;
+                display: none;
+                left: 5px;
+                top: 1px;
+                width: 5px;
+                height: 10px;
+                border: solid white;
+                border-width: 0 2px 2px 0;
+                transform: rotate(45deg);
+            }
+            .checkbox-input:checked ~ .checkbox-custom {
+                background-color: #6c63ff;
+                border-color: #6c63ff;
+            }
+            .checkbox-input:checked ~ .checkbox-custom::after {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-white min-h-screen flex items-center justify-center p-4 transition-colors duration-500">
+    <!-- 右上角头像 -->
+    <div id="topAvatar" class="fixed top-4 right-4 z-40 hidden md:block cursor-pointer">
+        <img src="https://picsum.photos/seed/avatar/120/120" alt="用户头像" class="w-12 h-12 rounded-full border-2 border-white shadow-lg hover:scale-110 transition-transform duration-300">
+    </div>
+
+    <!-- 头像查看器 -->
+    <div id="avatarViewer" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-transparent p-0 rounded-full shadow-2xl transform transition-transform duration-300 scale-95">
+            <img id="viewerAvatar" src="" alt="放大的头像" class="rounded-full">
+        </div>
+    </div>
+
+    <div class="w-full max-w-2xl mx-auto">
+        <!-- 背景设置卡片 -->
+        <div id="bg-settings-card" class="bg-white rounded-xl p-5 mb-6 custom-shadow transition-custom hover:shadow-md">
+            <div class="flex justify-between items-center">
+                <label class="text-dark font-medium">背景设置</label>
+                <div class="flex items-center space-x-2">
+                    <span class="text-dark text-sm">毛玻璃效果</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="glassToggle" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3 mt-4">
+                <span class="w-10 h-10 rounded-full bg-white border border-gray-200 cursor-pointer transition-custom hover:scale-110 ring-2 ring-primary" data-color="#ffffff"></span>
+                <span class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 cursor-pointer transition-custom hover:scale-110" data-color="#f0f0f0"></span>
+                <span class="w-10 h-10 rounded-full bg-gray-200 border border-gray-200 cursor-pointer transition-custom hover:scale-110" data-color="#e0e0e0"></span>
+                <span class="w-10 h-10 rounded-full bg-gray-300 border border-gray-200 cursor-pointer transition-custom hover:scale-110" data-color="#d0d0d0"></span>
+                <span class="w-10 h-10 rounded-full bg-blue-50 border border-gray-200 cursor-pointer transition-custom hover:scale-110" data-color="#e8f4ff"></span>
+                <span class="w-10 h-10 rounded-full bg-green-50 border border-gray-200 cursor-pointer transition-custom hover:scale-110" data-color="#e8fff0"></span>
+                <span class="w-10 h-10 rounded-full bg-purple-50 border border-gray-200 cursor-pointer transition-custom hover:scale-110" data-color="#f3e8ff"></span>
+                <span class="w-10 h-10 rounded-full bg-pink-50 border border-gray-200 cursor-pointer transition-custom hover:scale-110" data-color="#ffeef4"></span>
+                <span class="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 cursor-pointer transition-custom hover:scale-110" data-color="#333333"></span>
+                <span class="w-10 h-10 rounded-full bg-blue-800 border border-blue-700 cursor-pointer transition-custom hover:scale-110" data-color="#1e40af"></span>
+                <span class="w-10 h-10 rounded-full bg-purple-800 border border-purple-700 cursor-pointer transition-custom hover:scale-110" data-color="#5b21b6"></span>
+            </div>
+        </div>
+
+        <!-- 个人资料卡片 -->
+        <div id="profile-card" class="bg-white rounded-xl p-6 mb-6 custom-shadow transition-custom hover:shadow-md">
+            <div class="text-center">
+                <div class="relative inline-block cursor-pointer" id="avatarContainer">
+                    <img id="avatar" src="https://picsum.photos/seed/avatar/120/120" alt="chahubeili" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md transition-custom">
+                    <div class="absolute -bottom-1 -right-1 bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/80 transition-custom" id="changeAvatarBtn">
+                        <i class="fa fa-pencil text-xs"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h2 id="username" class="text-2xl font-bold text-dark">chahubeili</h2>
+                    <p id="bio" class="mt-1 text-gray-500">苦难无法避免</p>
+                </div>
+                
+                <div class="mt-6 flex justify-center space-x-4">
+                    <a href="https://github.com/chahubeili" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 transition-custom hover:bg-primary hover:text-white hover:rotate-12" title="GitHub">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
+                    <a href="https://twitter.com/chahubeili" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 transition-custom hover:bg-primary hover:text-white hover:rotate-12" title="Twitter">
+                        <i class="fa-brands fa-twitter"></i>
+                    </a>
+                    <a href="https://www.xiaoheihe.cn/user/profile/12345678" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 transition-custom hover:bg-primary hover:text-white hover:rotate-12" title="小黑盒">
+                        <i class="fa fa-gamepad"></i>
+                    </a>
+                    <a href="https://space.bilibili.com/12345678" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 transition-custom hover:bg-primary hover:text-white hover:rotate-12" title="Bilibili">
+                        <i class="fa-brands fa-bilibili"></i>
+                    </a>
+                </div>
+                
+                <button id="editProfileBtn" class="mt-5 inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium transition-custom hover:bg-primary hover:text-white">
+                    <i class="fa fa-user-edit mr-1"></i> 编辑资料
+                </button>
+            </div>
+        </div>
+
+        <!-- 留言板卡片 -->
+        <div id="message-card" class="bg-white rounded-xl p-6 mb-6 custom-shadow transition-custom hover:shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <label class="text-dark font-medium">留言板</label>
+                <div class="relative">
+                    <select id="sortSelect" class="appearance-none bg-gray-100 border-0 rounded-lg py-2 pl-4 pr-10 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="newest">最新在前</option>
+                        <option value="oldest">最旧在前</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                        <i class="fa fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <textarea id="messageInput" placeholder="留下你的留言..." class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none h-24 transition-custom"></textarea>
+            
+            <div class="mt-3 flex items-center justify-between">
+                <div class="flex items-center">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autoDelete" class="sr-only checkbox-input">
+                        <span class="checkbox-custom"></span>
+                        <span class="ml-2 text-sm text-gray-600">24小时后自动删除</span>
+                    </label>
+                </div>
+                <div class="flex items-center">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="anonymousMessage" class="sr-only checkbox-input">
+                        <span class="checkbox-custom"></span>
+                        <span class="ml-2 text-sm text-gray-600">匿名留言</span>
+                    </label>
+                </div>
+            </div>
+            
+            <button id="sendButton" class="mt-4 w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-custom transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+                <i class="fa fa-paper-plane mr-2"></i> 发送
+            </button>
+            
+            <!-- 留言容器 -->
+            <div id="messagesContainer" class="mt-6 space-y-4">
+                <!-- 初始状态提示 -->
+                <div id="emptyMessage" class="text-center py-8 text-gray-400">
+                    <i class="fa fa-comment-dots text-3xl mb-2"></i>
+                    <p>现在还没有留言，快来留下你的想法吧！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑资料模态框 -->
+    <div id="editProfileModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-dark">编辑资料</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="text-center">
+                    <img id="modalAvatar" src="https://picsum.photos/seed/avatar/120/120" alt="当前头像" class="w-24 h-24 rounded-full object-cover mx-auto mb-2">
+                    <button id="uploadAvatarBtn" class="text-primary text-sm">上传新头像</button>
+                    <input type="file" id="avatarInput" class="hidden" accept="image/*">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                    <input type="text" id="modalUsername" value="chahubeili" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">个人简介</label>
+                    <textarea id="modalBio" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none h-20">苦难无法避免</textarea>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button id="cancelEditBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">取消</button>
+                    <button id="saveEditBtn" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 背景颜色选择功能
+        const colorBlocks = document.querySelectorAll('[data-color]');
+        const body = document.body;
+        
+        colorBlocks.forEach(block => {
+            block.addEventListener('click', () => {
+                const color = block.getAttribute('data-color');
+                body.style.backgroundColor = color;
+                
+                // 更新选中状态
+                colorBlocks.forEach(b => b.classList.remove('ring-2', 'ring-primary'));
+                block.classList.add('ring-2', 'ring-primary');
+                
+                // 存储用户偏好
+                localStorage.setItem('bgColor', color);
+            });
+        });
+        
+        // 毛玻璃效果切换
+        const glassToggle = document.getElementById('glassToggle');
+        const cards = [
+            document.getElementById('bg-settings-card'),
+            document.getElementById('profile-card'),
+            document.getElementById('message-card')
+        ];
+        
+        glassToggle.addEventListener('change', () => {
+            if (glassToggle.checked) {
+                cards.forEach(card => {
+                    card.classList.add('glass-effect');
+                });
+            } else {
+                cards.forEach(card => {
+                    card.classList.remove('glass-effect');
+                });
+            }
+            
+            // 存储用户偏好
+            localStorage.setItem('glassEffect', glassToggle.checked);
+        });
+        
+        // 初始化毛玻璃效果
+        if (localStorage.getItem('glassEffect') === 'false') {
+            glassToggle.checked = false;
+            cards.forEach(card => {
+                card.classList.remove('glass-effect');
+            });
+        } else {
+            glassToggle.checked = true;
+            cards.forEach(card => {
+                card.classList.add('glass-effect');
+            });
+        }
+        
+        // 初始化背景颜色
+        const savedBgColor = localStorage.getItem('bgColor');
+        if (savedBgColor) {
+            body.style.backgroundColor = savedBgColor;
+            
+            // 更新选中状态
+            colorBlocks.forEach(block => {
+                if (block.getAttribute('data-color') === savedBgColor) {
+                    block.classList.add('ring-2', 'ring-primary');
+                } else {
+                    block.classList.remove('ring-2', 'ring-primary');
+                }
+            });
+        }
+        
+        // 编辑资料模态框
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const editProfileModal = document.getElementById('editProfileModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const saveEditBtn = document.getElementById('saveEditBtn');
+        const modalAvatar = document.getElementById('modalAvatar');
+        const avatarInput = document.getElementById('avatarInput');
+        const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+        const username = document.getElementById('username');
+        const bio = document.getElementById('bio');
+        const modalUsername = document.getElementById('modalUsername');
+        const modalBio = document.getElementById('modalBio');
+        
+        editProfileBtn.addEventListener('click', () => {
+            // 同步当前数据到模态框
+            modalUsername.value = username.textContent;
+            modalBio.value = bio.textContent;
+            modalAvatar.src = document.getElementById('avatar').src;
+            
+            // 显示模态框
+            editProfileModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // 防止背景滚动
+        });
+        
+        function closeModal() {
+            editProfileModal.classList.add('hidden');
+            document.body.style.overflow = ''; // 恢复背景滚动
+        }
+        
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelEditBtn.addEventListener('click', closeModal);
+        
+        saveEditBtn.addEventListener('click', () => {
+            // 更新个人资料
+            username.textContent = modalUsername.value;
+            bio.textContent = modalBio.value;
+            document.getElementById('avatar').src = modalAvatar.src;
+            document.getElementById('topAvatar').querySelector('img').src = modalAvatar.src;
+            
+            // 存储用户信息
+            localStorage.setItem('username', modalUsername.value);
+            localStorage.setItem('bio', modalBio.value);
+            localStorage.setItem('avatarUrl', modalAvatar.src);
+            
+            closeModal();
+        });
+        
+        // 上传头像功能
+        uploadAvatarBtn.addEventListener('click', () => {
+            avatarInput.click();
+        });
+        
+        avatarInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    modalAvatar.src = e.target.result;
+                };
+                
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        // 初始化用户信息
+        if (localStorage.getItem('username')) {
+            username.textContent = localStorage.getItem('username');
+            modalUsername.value = localStorage.getItem('username');
+        }
+        
+        if (localStorage.getItem('bio')) {
+            bio.textContent = localStorage.getItem('bio');
+            modalBio.value = localStorage.getItem('bio');
+        }
+        
+        if (localStorage.getItem('avatarUrl')) {
+            document.getElementById('avatar').src = localStorage.getItem('avatarUrl');
+            document.getElementById('topAvatar').querySelector('img').src = localStorage.getItem('avatarUrl');
+            modalAvatar.src = localStorage.getItem('avatarUrl');
+        }
+        
+        // 右上角头像同步
+        document.getElementById('topAvatar').querySelector('img').src = document.getElementById('avatar').src;
+        
+        // 头像点击放大功能
+        const avatarContainer = document.getElementById('avatarContainer');
+        const avatarViewer = document.getElementById('avatarViewer');
+        const viewerAvatar = document.getElementById('viewerAvatar');
+        const topAvatar = document.getElementById('topAvatar');
+        
+        function openAvatarViewer(src) {
+            viewerAvatar.src = src;
+            avatarViewer.classList.remove('hidden');
+            
+            // 使头像尺寸比原来大一倍
+            const img = new Image();
+            img.onload = function() {
+                viewerAvatar.style.width = `${img.width * 2}px`;
+                viewerAvatar.style.height = `${img.height * 2}px`;
+                
+                // 添加动画效果
+                setTimeout(() => {
+                    avatarViewer.classList.add('opacity-100');
+                    avatarViewer.querySelector('div').classList.add('scale-100');
+                    avatarViewer.querySelector('div').classList.remove('scale-95');
+                }, 10);
+            };
+            img.src = src;
+            
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeAvatarViewer() {
+            avatarViewer.classList.remove('opacity-100');
+            avatarViewer.querySelector('div').classList.remove('scale-100');
+            avatarViewer.querySelector('div').classList.add('scale-95');
+            
+            setTimeout(() => {
+                avatarViewer.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+        
+        avatarContainer.addEventListener('click', () => {
+            openAvatarViewer(document.getElementById('avatar').src);
+        });
+        
+        topAvatar.addEventListener('click', () => {
+            openAvatarViewer(topAvatar.querySelector('img').src);
+        });
+        
+        avatarViewer.addEventListener('click', (e) => {
+            if (e.target === avatarViewer) {
+                closeAvatarViewer();
+            }
+        });
+        
+        // 头像边铅笔图标点击事件
+        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+        changeAvatarBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止触发头像容器的点击事件
+            avatarInput.click();
+        });
+        
+        // 更真实的随机用户名生成
+        const realUsernames = [
+            // 二次元风格
+            "樱花酱🌸", "星空下的喵", "初音未来粉", "轻音少女", "夏目友人帐", "二次元の魂", "动漫控", "神の脚本",
+            // 网红风格
+            "美妆达人", "生活小确幸", "旅行日记", "美食探店", "健身打卡", "穿搭博主", "摄影爱好者", "咖啡师",
+            // 游戏玩家
+            "峡谷王者", "吃鸡大神", "原神旅行者", "赛博朋克", "电竞选手", "第五人格", "英雄联盟", "王者荣耀",
+            // 情感类
+            "治愈系", "深夜树洞", "孤独患者", "温柔以待", "人间清醒", "正能量", "佛系青年", "情感导师",
+            // 其他
+            "铲屎官", "程序猿", "设计师", "学生党", "自由职业者", "打工人", "退休生活", "斜杠青年"
+        ];
+        
+        // 多元头像来源
+        function getRandomAvatar() {
+            const avatarTypes = [
+                // 二次元动漫头像
+                `https://picsum.photos/seed/anime${Math.floor(Math.random() * 100)}/40/40`,
+                // ins风格头像
+                `https://picsum.photos/seed/ins${Math.floor(Math.random() * 100)}/40/40`,
+                // 网红高质量自拍
+                `https://picsum.photos/seed/influencer${Math.floor(Math.random() * 100)}/40/40`,
+                // 豪车
+                `https://picsum.photos/seed/car${Math.floor(Math.random() * 100)}/40/40`,
+                // 萌宠
+                `https://picsum.photos/seed/pet${Math.floor(Math.random() * 100)}/40/40`,
+                // 表情包
+                `https://picsum.photos/seed/meme${Math.floor(Math.random() * 100)}/40/40`,
+                // 山水图片
+                `https://picsum.photos/seed/nature${Math.floor(Math.random() * 100)}/40/40`,
+                // 自拍
+                `https://picsum.photos/seed/selfie${Math.floor(Math.random() * 100)}/40/40`
+            ];
+            
+            return avatarTypes[Math.floor(Math.random() * avatarTypes.length)];
+        }
+        
+        // 格式化时间 - 显示完整年月日和时间
+        function formatTime(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        }
+        
+        // 发送留言功能
+        const sendButton = document.getElementById('sendButton');
+        const messageInput = document.getElementById('messageInput');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const sortSelect = document.getElementById('sortSelect');
+        const emptyMessage = document.getElementById('emptyMessage');
+        const anonymousMessage = document.getElementById('anonymousMessage');
+        
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                // 添加发送动画
+                sendButton.classList.add('animate-pulse');
+                
+                // 模拟发送延迟
+                setTimeout(() => {
+                    // 创建新留言元素
+                    const now = new Date();
+                    const timeString = formatTime(now);
+                    
+                    let msgUsername, msgAvatar;
+                    
+                    // 根据是否勾选"匿名留言"决定使用个人信息还是随机信息
+                    if (anonymousMessage.checked) {
+                        // 使用更真实的随机用户名和多元头像
+                        msgUsername = realUsernames[Math.floor(Math.random() * realUsernames.length)];
+                        msgAvatar = getRandomAvatar();
+                    } else {
+                        msgUsername = username.textContent;
+                        msgAvatar = document.getElementById('avatar').src;
+                    }
+                    
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'border-t pt-4';
+                    messageElement.innerHTML = `
+                        <div class="flex items-start">
+                            <img src="${msgAvatar}" alt="${msgUsername}" class="w-10 h-10 rounded-full mr-3 cursor-pointer hover:scale-110 transition-transform duration-300" onclick="openAvatarViewer('${msgAvatar}')">
+                            <div class="flex-1">
+                                <div class="flex items-center">
+                                    <h4 class="font-medium text-dark">${msgUsername}</h4>
+                                    <span class="ml-2 text-xs text-gray-400">${timeString}</span>
+                                </div>
+                                <p class="mt-1 text-gray-600">${message}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 隐藏空留言提示
+                    if (emptyMessage) {
+                        emptyMessage.style.display = 'none';
+                    }
+                    
+                    // 添加到容器
+                    if (sortSelect.value === 'newest') {
+                        messagesContainer.prepend(messageElement);
+                    } else {
+                        messagesContainer.appendChild(messageElement);
+                    }
+                    
+                    // 清空输入框
+                    messageInput.value = '';
+                    
+                    // 重置按钮状态
+                    sendButton.classList.remove('animate-pulse');
+                    
+                    // 保存留言
+                    saveMessage({
+                        content: message,
+                        time: now.toISOString(),
+                        username: msgUsername,
+                        avatar: msgAvatar,
+                        autoDelete: document.getElementById('autoDelete').checked,
+                        isAnonymous: anonymousMessage.checked
+                    });
+                    
+                    // 如果勾选了自动删除，设置定时任务
+                    if (document.getElementById('autoDelete').checked) {
+                        const deleteTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                        messageElement.setAttribute('data-delete-time', deleteTime.toISOString());
+                        
+                        // 检查并清理过期留言
+                        checkExpiredMessages();
+                    }
+                }, 500);
+            }
+        });
+        
+        // 排序功能
+        sortSelect.addEventListener('change', () => {
+            const messages = Array.from(messagesContainer.children);
+            
+            // 跳过空留言提示
+            if (messages[0] && messages[0].id === 'emptyMessage') {
+                messages.shift();
+            }
+            
+            // 清空容器
+            messagesContainer.innerHTML = '';
+            
+            // 如果没有留言，显示空提示
+            if (messages.length === 0) {
+                if (emptyMessage) {
+                    emptyMessage.style.display = 'block';
+                }
+                return;
+            }
+            
+            // 根据选择重新添加
+            if (sortSelect.value === 'newest') {
+                messages.reverse().forEach(msg => messagesContainer.appendChild(msg));
+            } else {
+                messages.forEach(msg => messagesContainer.appendChild(msg));
+            }
+        });
+        
+        // 本地存储留言
+        function saveMessage(message) {
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            messages.unshift(message); // 添加到开头，保持最新的在前
+            
+            // 限制最多保存100条留言
+            if (messages.length > 100) {
+                messages = messages.slice(0, 100);
+            }
+            
+            localStorage.setItem('messages', JSON.stringify(messages));
+        }
+        
+        // 删除留言
+        function deleteMessage(element) {
+            element.classList.add('opacity-0');
+            setTimeout(() => {
+                element.remove();
+                
+                // 检查是否没有留言了
+                const messages = messagesContainer.querySelectorAll('div:not(#emptyMessage)');
+                if (messages.length === 0 && emptyMessage) {
+                    emptyMessage.style.display = 'block';
+                }
+            }, 500);
+        }
+        
+        // 检查过期留言
+        function checkExpiredMessages() {
+            const now = new Date();
+            const messages = messagesContainer.querySelectorAll('[data-delete-time]');
+            
+            messages.forEach(msg => {
+                const deleteTime = new Date(msg.getAttribute('data-delete-time'));
+                if (now >= deleteTime) {
+                    deleteMessage(msg);
+                }
+            });
+        }
+        
+        // 加载本地存储的留言
+        function loadMessages() {
+            const messages = JSON.parse(localStorage.getItem('messages')) || [];
+            
+            // 过滤掉过期的留言
+            const validMessages = messages.filter(msg => {
+                if (msg.autoDelete) {
+                    const deleteTime = new Date(new Date(msg.time).getTime() + 24 * 60 * 60 * 1000);
+                    return new Date() < deleteTime;
+                }
+                return true;
+            });
+            
+            // 如果没有有效留言，显示空提示
+            if (validMessages.length === 0 && emptyMessage) {
+                emptyMessage.style.display = 'block';
+            }
+            
+            validMessages.forEach(msg => {
+                const messageDate = new Date(msg.time);
+                const timeString = formatTime(messageDate);
+                
+                const messageElement = document.createElement('div');
+                messageElement.className = 'border-t pt-4';
+                messageElement.innerHTML = `
+                    <div class="flex items-start">
+                        <img src="${msg.avatar}" alt="${msg.username}" class="w-10 h-10 rounded-full mr-3 cursor-pointer hover:scale-110 transition-transform duration-300" onclick="openAvatarViewer('${msg.avatar}')">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <h4 class="font-medium text-dark">${msg.username}</h4>
+                                <span class="ml-2 text-xs text-gray-400">${timeString}</span>
+                            </div>
+                            <p class="mt-1 text-gray-600">${msg.content}</p>
+                        </div>
+                    </div>
+                `;
+                
+                // 如果设置了自动删除，添加删除时间属性
+                if (msg.autoDelete) {
+                    const deleteTime = new Date(messageDate.getTime() + 24 * 60 * 60 * 1000);
+                    messageElement.setAttribute('data-delete-time', deleteTime.toISOString());
+                }
+                
+                messagesContainer.appendChild(messageElement);
+            });
+            
+            // 保存过滤后的留言
+            localStorage.setItem('messages', JSON.stringify(validMessages));
+        }
+        
+        // 页面加载时加载留言
+        loadMessages();
+        
+        // 定时检查过期留言
+        setInterval(checkExpiredMessages, 60 * 60 * 1000); // 每小时检查一次
+        
+        // 将openAvatarViewer函数添加到全局作用域
+        window.openAvatarViewer = openAvatarViewer;
+    </script>
+</body>
+</html>
+    
